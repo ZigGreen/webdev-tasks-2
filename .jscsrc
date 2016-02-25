@@ -38,7 +38,6 @@
     },
     "disallowSpacesInsideParentheses": true,
     "disallowTabs": true,
-    "disallowTrailingComma": true,
     "disallowTrailingWhitespace": true,
     "disallowYodaConditions": true,
     "maximumLineLength": 100,
