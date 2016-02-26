@@ -61,22 +61,24 @@ export const remove = action('remove');
 
 export const update = action('update');
 
-export const insert = useWith(pipe, [assoc('query'), action('insertOne')])
+export const insert = useWith(pipe, [assoc('query'), action('insertOne')]);
 
-export const set = pipe(assoc, over(lensProp('options')))
+export const set = pipe(assoc, over(lensProp('options')));
 //export const update = pipe
 
 const RequestType = {
-  query     : {'$and': []},
-  serverURL : 'mongodb://localhost:27017/test',
+  query: {$and: []},
+  serverURL: 'mongodb://localhost:27017/test',
   collection: 'abc',
-  callback  : identity,
-  type      : 'find'
+  callback: identity,
+  type: 'find'
 };
 
 var startRequest = req =>
   MongoClient.connect(req.serverURL, (err, db) => {
-    if (err) return req.callback(err);
+    if (err) {
+      return req.callback(err);
+    }
     const reqParams = props(['query', 'options'], req);
     var res = db.collection(req.collection)[req.type](...reqParams);
     if (res.then) {

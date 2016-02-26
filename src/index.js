@@ -9,7 +9,7 @@ M.multivarka(
 const reqDescriptor = M.multivarka(
   M.server('mongodb://localhost:27017/test'),
   M.collection('abc'),
-  M.insert({"a": 999, "b": "t"}, () => {
+  M.insert({a: 999, b: 't'}, () => {
     M.multivarka(
       M.server('mongodb://localhost:27017/test'),
       M.collection('abc'),
