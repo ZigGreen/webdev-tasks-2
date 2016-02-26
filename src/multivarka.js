@@ -2,7 +2,8 @@ import {MongoClient} from 'mongodb';
 import {
   lensProp, defaultTo, pipe, lensPath, concat, identity, over, useWith, ifElse,
   is, pair, lensIndex, partial, compose, apply, assoc, objOf, flip, merge,
-  toPairs, map, always, __, call, prepend, has, prop, tap
+  toPairs, map, always, __, call, prepend, has, prop, tap, props, curryN,
+  converge, when as RWhen, pathSatisfies, equals, omit
 } from 'ramda';
 
 const wrapCompose = fn => partial(compose, [fn]);
@@ -48,23 +49,48 @@ export const server = assoc('serverURL');
 
 export const collection = assoc('collection');
 
-export const find = pipe(objOf('callback'), assoc('type', 'find'), flip(merge));
+const action = type => pipe(
+  objOf('callback'),
+  assoc('type', type),
+  flip(merge)
+);
+
+export const find = action('find');
+
+export const remove = action('remove');
+
+export const update = action('update');
+
+export const insert = useWith(pipe, [assoc('query'), action('insertOne')])
+
+export const set = pipe(assoc, over(lensProp('options')))
+//export const update = pipe
 
 const RequestType = {
-  query: {'$and': []},
-  serverURL: 'mongodb://localhost:27017/test',
+  query     : {'$and': []},
+  serverURL : 'mongodb://localhost:27017/test',
   collection: 'abc',
-  callback: identity,
-  type: 'find'
+  callback  : identity,
+  type      : 'find'
 };
 
 var startRequest = req =>
   MongoClient.connect(req.serverURL, (err, db) => {
     if (err) return req.callback(err);
-    db.collection(req.collection)[req.type](req.query).toArray(req.callback);
+    const reqParams = props(['query', 'options'], req);
+    var res = db.collection(req.collection)[req.type](...reqParams);
+    if (res.then) {
+      res.then(req.callback);
+    } else {
+      res.toArray(req.callback);
+    }
   });
 
 export const multivarka = (...reqBuildChain) => compose(
   tap(startRequest),
+  over(lensProp('query'), RWhen(
+    pathSatisfies(equals(0), ['$and', 'length']),
+    omit(['$and'])
+  )),
   ...reqBuildChain
 )(RequestType);
